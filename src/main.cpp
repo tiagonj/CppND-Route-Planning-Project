@@ -27,6 +27,38 @@ static std::optional<std::vector<std::byte>> ReadFile(const std::string &path)
     return std::move(contents);
 }
 
+static bool isValueOutsideRange(float value, float minValue, float maxValue)
+{
+    return (value < minValue) || (value > maxValue);
+}
+
+static float getFloatFromInput(std::string name)
+{
+    float value;
+
+    while (true)
+    {
+        std::cout << "Enter value for " << name << " [0 - 100]: ";
+        std::cin >> value;
+
+        if (std::cin.fail())
+        {
+            std::cout << "ERROR: failed to parse input value for " << name << ". Please try again!\n\n";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            continue;
+        }
+
+        if (isValueOutsideRange(value, 0.0, 100.0f))
+        {
+            std::cout << "ERROR: invalid value (" << value << ") for " << name << " (must be in range [0 - 100]). Please try again!\n\n";
+            continue;
+        }
+
+        return value;
+    }
+}
+
 int main(int argc, const char **argv)
 {    
     std::string osm_data_file = "";
@@ -51,16 +83,20 @@ int main(int argc, const char **argv)
         else
             osm_data = std::move(*data);
     }
-    
+
     // TODO 1: Declare floats `start_x`, `start_y`, `end_x`, and `end_y` and get
     // user input for these values using std::cin. Pass the user input to the
     // RoutePlanner object below in place of 10, 10, 90, 90.
+    float start_x = getFloatFromInput("start_x");
+    float start_y = getFloatFromInput("start_y");
+    float end_x = getFloatFromInput("end_x");
+    float end_y = getFloatFromInput("end_y");
 
     // Build Model.
     RouteModel model{osm_data};
 
     // Create RoutePlanner object and perform A* search.
-    RoutePlanner route_planner{model, 10, 10, 90, 90};
+    RoutePlanner route_planner{model, start_x, start_y, end_x, end_y};
     route_planner.AStarSearch();
 
     std::cout << "Distance: " << route_planner.GetDistance() << " meters. \n";
